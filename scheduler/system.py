@@ -1,15 +1,17 @@
-from utilities.adafruit_mqtt import AdafruitMQTT
+from utilities.mqtt_broker import MQTTBroker
 from typing import Literal
 from scheduler.store import Store
 from scheduler.scheduler import SchedulerFactory
 from scheduler.loader import Loader
 from scheduler.core import Core
 from threading import Thread
+from datetime import datetime
+import json
 
 import time
   
 class System:
-  def __init__(self, mqtt_broker: AdafruitMQTT, store: str, algorithm: Literal["FCFS", "RoundRobin"]) -> None:
+  def __init__(self, mqtt_broker: MQTTBroker, store: str, algorithm: Literal["FCFS", "RoundRobin"]) -> None:
     """
     Represents a system that interacts with an MQTT broker and uses a specified scheduling algorithm.
 
@@ -18,26 +20,27 @@ class System:
     and "RoundRobin".
 
     Attributes:
-      mqtt_broker (AdafruitMQTT): The MQTT broker used for communication.
+      mqtt_broker (MQTTBroker): The MQTT broker used for communication.
       store (str): The storage location or identifier where data or tasks are saved.
       algorithm (Literal["FCFS", "RoundRobin"]): The scheduling algorithm used for task processing.
         - "FCFS": Tasks are processed in the order they are received.
         - "RoundRobin": Tasks are processed in a cyclic manner with time slices.
 
     Args:
-      mqtt_broker (AdafruitMQTT): The MQTT broker for sending and receiving messages.
+      mqtt_broker (MQTTBroker): The MQTT broker for sending and receiving messages.
       store (str): The name or path of the storage system (relative path).
       algorithm (Literal["FCFS", "RoundRobin"]): The scheduling algorithm to be used, either "FCFS" or "RoundRobin".
 
     Example:
       >>> system = System(mqtt_broker=my_broker, store="task_store.json", algorithm="FCFS")
     """
-    self.ada = mqtt_broker
+    self.mqtt_client = mqtt_broker
     self.store = Store(store)
     self.scheduler = SchedulerFactory.get_scheduler(algorithm)
     self.loader = Loader(self.scheduler)
-    self.core1 = Core("core 1")
-    self.ada.add_observer(self.store)
+    self.core = Core("core 1")
+
+    self.mqtt_client.add_observer(self.store)
     self.store.add_observer(self.loader)
     self.store.load_data()
   
@@ -47,10 +50,49 @@ class System:
         continue
       else:
         task_PCB = self.scheduler.get_task()
-        task_PCB = self.core1.run(task_PCB)
-        if (task_PCB != None):
-          self.scheduler.add_task(task_PCB)
+
+        if task_PCB.program_pointer == 0:
+          current_datetime = datetime.now()
+          formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+          task_PCB.task_start_time = formatted_datetime
           
+          message = {
+            "task_id": task_PCB.task_id,
+            "schedule_id": task_PCB.schedule_id,
+            "timestamp": formatted_datetime,
+            "message_type": "schedule_begin",
+            "message": f"({formatted_datetime}) {task_PCB.schedule_name} has started operating"
+          }
+          self.mqtt_client.publish("gateway-send", json.dumps(message, separators=(',', ':')), 1)
+
+        task_PCB = self.core.run(task_PCB)
+
+        current_datetime = datetime.now()
+        formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+        if task_PCB.program_pointer >= task_PCB.program_size:
+          task_PCB.task_end_time = formatted_datetime
+
+          message = {
+            "task_id": task_PCB.task_id,
+            "schedule_id": task_PCB.schedule_id,
+            "timestamp": formatted_datetime,
+            "message_type": "schedule_end",
+            "message": f"({formatted_datetime}) {task_PCB.schedule_name} has been completed",
+            "task_start_time": task_PCB.task_start_time,
+            "task_end_time": task_PCB.task_end_time
+          }
+        else:
+          message = {
+            "task_id": task_PCB.task_id,
+            "schedule_id": task_PCB.schedule_id,
+            "timestamp": formatted_datetime,
+            "message_type": "schedule_progress",
+            "message": f"({formatted_datetime}) {task_PCB.schedule_name} is {(task_PCB.program_pointer / task_PCB.program_size * 100):.1f}% complete"
+          }
+          self.scheduler.add_task(task_PCB)
+
+        self.mqtt_client.publish("gateway-send", json.dumps(message, separators=(',', ':')), 1)
+
       time.sleep(1)
       
   def run_background(self):

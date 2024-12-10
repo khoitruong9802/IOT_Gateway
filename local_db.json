@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "id": 125,
+    "schedule_name": "Avocado schedule",
+    "priority": 3,
+    "area": 2,
+    "description": "no",
+    "flow1": 10,
+    "flow2": 10,
+    "flow3": 10,
+    "cycle": 3,
+    "status": 1,
+    "start_time": "17:58",
+    "stop_time": "18:00",
+    "schedule_type": "Daily",
+    "start_day": "2024-12-08",
+    "end_day": "2024-12-10",
+    "fertilizer_device_id": 1,
+    "days": []
+  }
+]

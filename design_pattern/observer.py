@@ -8,18 +8,18 @@ class Observer(ABC):
 
 class Subject:
   def __init__(self) -> None:
-    self.observers: List[Observer] = []
+    self._observers: List[Observer] = []
 
   def add_observer(self, observer: Observer) -> None:
-    self.observers.append(observer)
+    self._observers.append(observer)
 
   def remove_observer(self, observer: Observer) -> bool:
     try:
-      self.observers.remove(observer)
+      self._observers.remove(observer)
       return True
     except:
       return False
     
   def send_notify(self, data):
-    for observer in self.observers:
+    for observer in self._observers:
       observer.update(data)

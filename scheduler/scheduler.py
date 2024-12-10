@@ -12,6 +12,10 @@ class Scheduler(ABC):
   def get_task(self) -> TaskPCB:
     pass
 
+  @abstractmethod
+  def is_empty(self) -> bool:
+    pass
+  
 class SchedulerFactory:
   @staticmethod
   def get_scheduler(scheduler_algorithm: str) -> Scheduler:
@@ -32,7 +36,7 @@ class FCFS(Scheduler):
       return None
     return self.ready_queue.pop()
 
-  def is_empty(self) -> int:
+  def is_empty(self) -> bool:
     return len(self.ready_queue) == 0
 
 class RoundRobin(Scheduler):
@@ -47,7 +51,7 @@ class RoundRobin(Scheduler):
         return None
       return self.ready_queue.pop()
 
-    def is_empty(self) -> int:
+    def is_empty(self) -> bool:
       return len(self.ready_queue) == 0
 
 
@@ -63,5 +67,5 @@ class Priority(Scheduler):
         return None
       return self.ready_queue.pop()
 
-    def is_empty(self) -> int:
+    def is_empty(self) -> bool:
       return len(self.ready_queue) == 0

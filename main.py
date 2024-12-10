@@ -1,7 +1,6 @@
 from scheduler.system import System
-from utilities.adafruit_mqtt import AdafruitMQTT
+from utilities.mqtt_broker import MQTTBroker
 
-ada = AdafruitMQTT()
-watering = System(ada, "local_db.json", "FCFS")
+mqtt_broker = MQTTBroker()
+watering = System(mqtt_broker, "local_db.json", "RoundRobin")
 watering.run_blocking()
-
