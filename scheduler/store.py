@@ -15,6 +15,8 @@ class Store(Observer, Subject):
 
   def synchronize_database(self):
     api_url = "http://34.143.214.138:3001/api/v1/schedule/all"
+    print("Synchronize database")
+    # api_url = "http://localhost:3001/api/v1/schedule/all"
     try:
       response = requests.get(api_url)
       response.raise_for_status()  # Raise an exception for HTTP errors
@@ -56,6 +58,11 @@ class Store(Observer, Subject):
     self.data = [item for item in self.data if int(item.id) != int(id)]
     with open(self.file_name, "w", encoding="utf-8") as file:
       json.dump(self.get_data_dict(), file, ensure_ascii=False, indent=2)
+
+  def edit_item(self, data: TaskInfo) -> None:
+    self.data = [data if int(item.id) == int(data.id) else item for item in self.data]
+    with open(self.file_name, "w", encoding="utf-8") as file:
+      json.dump(self.get_data_dict(), file, ensure_ascii=False, indent=2)
       
   def update(self, data):
     feed_id = data[0]
@@ -72,6 +79,8 @@ class Store(Observer, Subject):
 
       elif (schedule_dict["method"] == "DEL"):
         self.remove_item(schedule.id)
+        self.send_notify(schedule.id)
 
       elif (schedule_dict["method"] == "EDIT"):
-        pass
+        self.edit_item(schedule)
+        self.send_notify([schedule, ])

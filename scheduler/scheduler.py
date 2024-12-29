@@ -23,6 +23,8 @@ class SchedulerFactory:
       return FCFS()
     elif scheduler_algorithm == "RoundRobin":
       return RoundRobin()
+    elif scheduler_algorithm == "Preemptive":
+      return Preemptive()
 
 class FCFS(Scheduler):
   def __init__(self):
@@ -40,32 +42,46 @@ class FCFS(Scheduler):
     return len(self.ready_queue) == 0
 
 class RoundRobin(Scheduler):
+  def __init__(self):
+    self.ready_queue: List[TaskPCB] = []
+
+  def add_task(self, task_PCB: TaskPCB):
+    self.ready_queue.insert(0, task_PCB)
+
+  def get_task(self) -> TaskPCB | None:
+    if (self.is_empty()):
+      return None
+    return self.ready_queue.pop()
+
+  def is_empty(self) -> bool:
+    return len(self.ready_queue) == 0
+
+class PriorityQueue:
     def __init__(self):
-      self.ready_queue: List[TaskPCB] = []
+        self.heap = []
 
-    def add_task(self, task_PCB: TaskPCB):
-      self.ready_queue.insert(0, task_PCB)
+    def push(self, item, priority):
+        # Invert the priority to simulate a max-heap
+        heapq.heappush(self.heap, (-priority, item))
 
-    def get_task(self) -> TaskPCB | None:
-      if (self.is_empty()):
-        return None
-      return self.ready_queue.pop()
+    def pop(self):
+        # Invert the priority back to get the original priority
+        return heapq.heappop(self.heap)[1]
 
-    def is_empty(self) -> bool:
-      return len(self.ready_queue) == 0
+    def is_empty(self):
+        return len(self.heap) == 0
 
+class Preemptive(Scheduler):
+  def __init__(self):
+    self.ready_queue = PriorityQueue()
 
-class Priority(Scheduler):
-    def __init__(self):
-      self.max_heap: List[TaskPCB] = []
+  def add_task(self, task_PCB: TaskPCB):
+    self.ready_queue.push(task_PCB, task_PCB.priority)
 
-    def add_task(self, task_PCB: TaskPCB):
-      self.ready_queue.insert(0, task_PCB)
+  def get_task(self) -> TaskPCB | None:
+    if (self.is_empty()):
+      return None
+    return self.ready_queue.pop()
 
-    def get_task(self) -> TaskPCB | None:
-      if (self.is_empty()):
-        return None
-      return self.ready_queue.pop()
-
-    def is_empty(self) -> bool:
-      return len(self.ready_queue) == 0
+  def is_empty(self) -> bool:
+    return self.ready_queue.is_empty()

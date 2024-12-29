@@ -6,30 +6,32 @@ from scheduler.loader import Loader
 from scheduler.core import Core
 from threading import Thread
 from datetime import datetime
+from scheduler.control_relay import ControlRelay
 import json
 
 import time
   
 class System:
-  def __init__(self, mqtt_broker: MQTTBroker, store: str, algorithm: Literal["FCFS", "RoundRobin"]) -> None:
+  def __init__(self, mqtt_broker: MQTTBroker, store: str, algorithm: Literal["FCFS", "RoundRobin", "Preemptive"]) -> None:
     """
     Represents a system that interacts with an MQTT broker and uses a specified scheduling algorithm.
 
     This class is responsible for managing communication with the given MQTT broker and implementing
-    a scheduling algorithm to handle tasks. The supported algorithms are "FCFS" (First-Come, First-Served)
-    and "RoundRobin".
+    a scheduling algorithm to handle tasks. The supported algorithms are "FCFS" (First-Come, First-Served),
+    "RoundRobin", and "Preemptive".
 
     Attributes:
       mqtt_broker (MQTTBroker): The MQTT broker used for communication.
       store (str): The storage location or identifier where data or tasks are saved.
-      algorithm (Literal["FCFS", "RoundRobin"]): The scheduling algorithm used for task processing.
+      algorithm (Literal["FCFS", "RoundRobin", "Preemptive"]): The scheduling algorithm used for task processing.
         - "FCFS": Tasks are processed in the order they are received.
         - "RoundRobin": Tasks are processed in a cyclic manner with time slices.
+        - "Preemptive": Tasks are prioritized, and higher-priority tasks can interrupt or preempt lower-priority tasks.
 
     Args:
       mqtt_broker (MQTTBroker): The MQTT broker for sending and receiving messages.
       store (str): The name or path of the storage system (relative path).
-      algorithm (Literal["FCFS", "RoundRobin"]): The scheduling algorithm to be used, either "FCFS" or "RoundRobin".
+      algorithm (Literal["FCFS", "RoundRobin", "Preemptive"]): The scheduling algorithm to be used, either "FCFS", "RoundRobin", or "Preemptive".
 
     Example:
       >>> system = System(mqtt_broker=my_broker, store="task_store.json", algorithm="FCFS")
@@ -38,9 +40,11 @@ class System:
     self.store = Store(store)
     self.scheduler = SchedulerFactory.get_scheduler(algorithm)
     self.loader = Loader(self.scheduler)
-    self.core = Core("core 1")
+    self.control_relay = ControlRelay()
+    self.core = Core("core")
 
     self.mqtt_client.add_observer(self.store)
+    self.mqtt_client.add_observer(self.control_relay)
     self.store.add_observer(self.loader)
     self.store.load_data()
   

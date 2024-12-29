@@ -12,7 +12,8 @@ class MQTTBroker(Subject):
         if load_dotenv():
             self._FEED_IDS = [
                 ("relay1", 1), ("relay2", 1), ("relay3", 1), ("relay4", 1),
-                ("relay5", 1), ("relay6", 1), ("relay7", 1), ("relay8", 1), ("schedules", 2)
+                ("relay5", 1), ("relay6", 1), ("relay7", 1), ("relay8", 1), ("schedules", 2),
+                ("area1/pump1", 2), ("area1/pump2", 2)
             ]
             self.subscription_map = {}  # To map mid to topic and QoS
 

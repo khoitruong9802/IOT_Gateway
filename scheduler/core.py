@@ -25,22 +25,22 @@ class Core:
 
       # fertilizer = Fertilizer()
       # fertilizer.control_relay(1, True)
-      # sleep(int(watering_args[0]) / 5)
+      # sleep(float(watering_args[0]) * 4)
       # fertilizer.control_relay(1, False)
 
       # fertilizer.control_relay(2, True)
-      # sleep(int(watering_args[1]) / 5)
+      # sleep(float(watering_args[1]) * 4)
       # fertilizer.control_relay(2, False)
 
       # fertilizer.control_relay(3, True)
-      # sleep(int(watering_args[2]) / 5)
+      # sleep(float(watering_args[2]) * 4)
       # fertilizer.control_relay(3, False)
 
       # fertilizer.control_relay(7, True)
       # sleep(5)
       # fertilizer.control_relay(7, False)
 
-      # fertilizer.control_relay(int(watering_args[3]) + 3, True)
+      # fertilizer.control_relay(float(watering_args[3]) + 3, True)
       # sleep(0.5)
 
       # fertilizer.control_relay(8, True)
@@ -48,21 +48,22 @@ class Core:
       # fertilizer.control_relay(8, False)
 
       # sleep(0.5)
-      # fertilizer.control_relay(int(watering_args[3]) + 3, False)
+      # fertilizer.control_relay(float(watering_args[3]) + 3, False)
 
+      # 1 lit 10s
       print(f"flow 1 = {watering_args[0]}")
       print("Relay 1 on")
-      sleep(int(watering_args[0]) / 5)
+      sleep(float(watering_args[0]) * 4)
       print("Relay 1 off")
 
       print(f"flow 2 = {watering_args[1]}")
       print("Relay 2 on")
-      sleep(int(watering_args[1]) / 5)
+      sleep(float(watering_args[1]) * 4)
       print("Relay 2 off")
 
       print(f"flow 3 = {watering_args[2]}")
       print("Relay 3 on")
-      sleep(int(watering_args[2]) / 5)
+      sleep(float(watering_args[2]) * 4)
       print("Relay 3 off")
 
       print("Pump in")
@@ -76,7 +77,7 @@ class Core:
 
       print("Pump out")
       print("Relay 8 on")
-      sleep(5)
+      sleep(0.5)
       print("Relay 8 off")
 
       print(f"Close water valve area {int(watering_args[3]) + 3}")

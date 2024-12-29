@@ -13,10 +13,20 @@ class TaskPCB:
     self.task_end_time: str = ""
     self.schedule_id: int = schedule_id
     self.schedule_name: int = schedule_name
-    self.prioty: int = priority
+    self.priority: int = priority
     self.instructions: List[Instruction] = instructions
     self.program_pointer: int = 0
     self.program_size: int = program_size
+
+  def __lt__(self, other):
+    return self.priority < other.priority
+
+  def __eq__(self, other):
+    return self.priority == other.priority
+  
+  def __gt__(self, other):
+    return self.priority > other.priority
+
 
 class TaskInfo:
   def __init__(self, data: Dict):
@@ -28,7 +38,7 @@ class TaskInfo:
     self.flow1: int = data.get("flow1")
     self.flow2: int = data.get("flow2")
     self.flow3: int = data.get("flow3")
-    self.cycle: int = data.get("cycle")
+    self.cycle: int = 0
     self.status: int = data.get("status")
     self.start_time: str = data.get("start_time")
     self.stop_time: str = data.get("stop_time")
@@ -42,8 +52,22 @@ class TaskInfo:
     return self.__dict__
 
   def generate_task(self) -> TaskPCB:
+    total_flow = self.flow1 + self.flow2 + self.flow3
+    cycle = total_flow // 3
+    temp = cycle * 3
+    new_flow1 = self.flow1 * temp / total_flow / cycle
+    new_flow2 = self.flow2 * temp / total_flow / cycle
+    new_flow3 = self.flow3 * temp / total_flow / cycle
+
     instructions = [{
       "instr": "watering",
-      "args": f"{self.flow1} {self.flow2} {self.flow3} {self.area}"
-    } for i in range(self.cycle)]
+      "args": f"{new_flow1} {new_flow2} {new_flow3} {self.area}"
+    } for i in range(cycle)]
+
+    if total_flow % 3 != 0:
+      instructions.append({
+        "instr": "watering",
+        "args": f"{self.flow1 - new_flow1 * cycle} {self.flow2 - new_flow2 * cycle} {self.flow3 - new_flow3 * cycle} {self.area}"
+      })
+    self.cycle = cycle if total_flow % 3 == 0 else cycle + 1
     return TaskPCB(self.id, self.schedule_name, self.priority, instructions, self.cycle)
